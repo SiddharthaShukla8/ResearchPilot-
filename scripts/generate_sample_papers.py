@@ -1,13 +1,33 @@
+#!/usr/bin/env python3
 """Script to generate realistic synthetic benchmark research papers for local evaluation and demos."""
+import os
+import subprocess
 import sys
 from pathlib import Path
 
+# Auto-re-execute using the backend virtual environment if PyMuPDF is not in current environment
 try:
     import pymupdf as fitz
 except ImportError:
     try:
         import fitz
     except ImportError:
+        venv_python = Path(__file__).resolve().parent.parent / "backend" / ".venv" / "bin" / "python3"
+        if venv_python.exists() and sys.executable != str(venv_python):
+            os.execv(str(venv_python), [str(venv_python)] + sys.argv)
+
+        # Alternatively try uv if installed
+        try:
+            backend_dir = Path(__file__).resolve().parent.parent / "backend"
+            result = subprocess.run(
+                ["uv", "run", "python", str(Path(__file__).resolve())],
+                cwd=str(backend_dir),
+                check=False,
+            )
+            sys.exit(result.returncode)
+        except Exception:
+            pass
+
         print(
             "Error: PyMuPDF is not installed in the current Python environment.\n"
             "Please run this script using your virtual environment, e.g.:\n"
