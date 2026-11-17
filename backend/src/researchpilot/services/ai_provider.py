@@ -4,7 +4,9 @@ import logging
 import math
 from abc import ABC, abstractmethod
 from typing import Any
+
 from openai import AsyncOpenAI
+
 from researchpilot.core.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -16,7 +18,6 @@ class AIProvider(ABC):
     @abstractmethod
     async def get_embeddings(self, texts: list[str]) -> list[list[float]]:
         """Generate dense embedding vectors for a batch of text chunks."""
-        pass
 
     @abstractmethod
     async def chat_complete(
@@ -26,7 +27,6 @@ class AIProvider(ABC):
         response_format: dict[str, Any] | None = None,
     ) -> str:
         """Call chat completion model."""
-        pass
 
 
 class OpenAIProvider(AIProvider):
