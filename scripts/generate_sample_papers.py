@@ -1,6 +1,21 @@
 """Script to generate realistic synthetic benchmark research papers for local evaluation and demos."""
+import sys
 from pathlib import Path
-import fitz
+
+try:
+    import pymupdf as fitz
+except ImportError:
+    try:
+        import fitz
+    except ImportError:
+        print(
+            "Error: PyMuPDF is not installed in the current Python environment.\n"
+            "Please run this script using your virtual environment, e.g.:\n"
+            "  cd backend && uv run python ../scripts/generate_sample_papers.py\n"
+            "or install PyMuPDF: pip install pymupdf",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 PAPER_1_TEXT = """
 Deep Convolutional Neural Networks for Glioblastoma MRI Segmentation
@@ -83,7 +98,7 @@ of Dice coefficients without confidence intervals or out-of-distribution detecti
 
 
 def generate_papers():
-    output_dir = Path("data/sample_papers")
+    output_dir = Path(__file__).resolve().parent.parent / "data" / "sample_papers"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     papers = [

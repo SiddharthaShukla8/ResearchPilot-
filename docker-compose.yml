@@ -12,9 +12,9 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d researchpilot"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   api:
     build:
@@ -56,6 +56,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      api:
+        condition: service_started
 
   frontend:
     build:
@@ -63,10 +65,7 @@ services:
       dockerfile: Dockerfile
     container_name: researchpilot-frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "5173:80"
     depends_on:
       - api
 

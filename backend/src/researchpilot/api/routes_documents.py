@@ -135,6 +135,52 @@ async def get_document(
     return doc
 
 
+@router.get("/documents/{document_id}/status")
+async def get_document_status(
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Lightweight endpoint for polling document processing status."""
+    repo = DocumentRepository(session)
+    doc = await repo.get_by_id_and_owner(document_id, current_user.id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found or unauthorized")
+    return {
+        "id": doc.id,
+        "status": doc.processing_status,
+        "processing_status": doc.processing_status,
+        "processing_error": doc.processing_error,
+        "page_count": doc.page_count,
+        "processed_at": doc.processed_at,
+    }
+
+
+@router.post("/documents/{document_id}/reprocess", response_model=DocumentResponse)
+async def reprocess_document(
+    document_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Safely and idempotently re-enqueue document for extraction and indexing."""
+    doc_repo = DocumentRepository(session)
+    doc = await doc_repo.get_by_id_and_owner(document_id, current_user.id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found or unauthorized")
+
+    await doc_repo.update_status(doc.id, status="queued", error=None)
+    job_repo = JobRepository(session)
+    await job_repo.enqueue(
+        owner_id=current_user.id,
+        project_id=doc.project_id,
+        target_id=doc.id,
+        job_type="ingest_document",
+    )
+    await session.commit()
+    await session.refresh(doc)
+    return doc
+
+
 @router.get("/documents/{document_id}/download")
 async def download_document(
     document_id: str,

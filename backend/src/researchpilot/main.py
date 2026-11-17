@@ -43,7 +43,7 @@ def create_app() -> FastAPI:
     # CORS configuration
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_origin],
+        allow_origins=[settings.frontend_origin, "http://localhost:5173", "http://127.0.0.1:5173"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -72,12 +72,15 @@ def create_app() -> FastAPI:
 
     @app.get("/system/capabilities", tags=["System"], status_code=status.HTTP_200_OK)
     async def system_capabilities():
-        """Report available capabilities without leaking secrets."""
+        """Report available capabilities and active AI provider mode without leaking secrets."""
         has_ai = bool(settings.openai_api_key and settings.openai_api_key.strip())
+        provider_mode = "live_openai" if has_ai else "offline_mock"
         return {
             "ai_configured": has_ai,
+            "provider_mode": provider_mode,
             "chat_model": settings.openai_chat_model,
             "embedding_model": settings.openai_embedding_model,
+            "embedding_dimensions": settings.embedding_dimensions,
             "max_upload_mb": settings.max_upload_mb,
             "max_pdf_pages": settings.max_pdf_pages,
             "citation_styles": ["numbered", "apa-like"],

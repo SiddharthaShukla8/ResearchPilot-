@@ -115,6 +115,22 @@ async def test_research_run_creation_and_plan_review(db_session):
         events = ev_res.json()
         assert len(events) >= 2
 
+        # Cancel the run
+        cancel_res = await client.post(
+            f"/api/v1/research-runs/{run_id}/cancel",
+            headers=headers,
+        )
+        assert cancel_res.status_code == 200
+        assert cancel_res.json()["status"] == "cancelled"
+
+        # Retry the cancelled/failed run
+        retry_res = await client.post(
+            f"/api/v1/research-runs/{run_id}/retry",
+            headers=headers,
+        )
+        assert retry_res.status_code == 200
+        assert retry_res.json()["status"] == "queued"
+
 
 @pytest.mark.asyncio
 async def test_full_orchestrator_pipeline_and_citation_verification(db_session):

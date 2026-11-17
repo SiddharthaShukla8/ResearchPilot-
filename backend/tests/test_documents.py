@@ -104,6 +104,22 @@ async def test_document_upload_and_deduplication():
         assert len(dup_data["uploaded"]) == 0
         assert "paper1_copy.pdf" in dup_data["duplicates"]
 
+        # Check document status
+        status_res = await client.get(
+            f"/api/v1/documents/{doc_id}/status",
+            headers=headers,
+        )
+        assert status_res.status_code == 200
+        assert status_res.json()["status"] in ["uploaded", "queued", "parsing", "ready", "error"]
+
+        # Trigger reprocess
+        reproc_res = await client.post(
+            f"/api/v1/documents/{doc_id}/reprocess",
+            headers=headers,
+        )
+        assert reproc_res.status_code == 200
+        assert reproc_res.json()["processing_status"] in ["uploaded", "queued", "parsing", "ready", "error"]
+
         # Download document
         down_res = await client.get(
             f"/api/v1/documents/{doc_id}/download",

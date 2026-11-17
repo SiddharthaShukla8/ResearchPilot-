@@ -175,6 +175,43 @@ async def approve_research_plan(
     return run
 
 
+@router.post("/research-runs/{run_id}/retry", response_model=ResearchRunResponse)
+async def retry_research_run(
+    run_id: str,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Retry a failed research run."""
+    run = await session.get(ResearchRun, run_id)
+    if not run or run.owner_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Research run not found or unauthorized")
+
+    if run.status not in ["failed", "cancelled"]:
+        raise HTTPException(status_code=409, detail=f"Cannot retry run in state '{run.status}'; only 'failed' or 'cancelled' runs can be retried.")
+
+    run.status = "queued"
+    run.error_code = None
+    run.error_message = None
+
+    job_repo = JobRepository(session)
+    await job_repo.enqueue(
+        owner_id=current_user.id,
+        project_id=run.project_id,
+        target_id=run.id,
+        job_type="execute_research",
+    )
+
+    event = AgentEvent(
+        run_id=run.id,
+        sequence=100,
+        event_type="run_retried",
+        safe_summary="Research run execution re-enqueued by user.",
+    )
+    session.add(event)
+    await session.commit()
+    return run
+
+
 @router.post("/research-runs/{run_id}/cancel", response_model=ResearchRunResponse)
 async def cancel_research_run(
     run_id: str,
@@ -259,7 +296,6 @@ async def export_run_report(
         raise HTTPException(status_code=409, detail="Report not ready for export")
 
     if format == "pdf":
-        # Generate clean printable HTML/PDF structure
         html_doc = f"""<!DOCTYPE html>
 <html>
 <head>
