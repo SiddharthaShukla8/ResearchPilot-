@@ -1,0 +1,63 @@
+# Progress Tracking — ResearchPilot
+
+## Completed Tasks
+- [x] **Milestone 0: Repository Audit and Planning**
+  - Audited local workspace and toolchains.
+  - Created `docs/REPOSITORY_AUDIT.md`, `DECISIONS.md`, `IMPLEMENTATION_PLAN.md`, `PROGRESS.md`, and `AGENTS.md`.
+- [x] **Milestone 1: Monorepo Foundation and Developer Experience**
+  - Scaffolded backend modular architecture and Pydantic v2 settings.
+  - Scaffolded frontend with React 18, TypeScript, Tailwind CSS, Lucide.
+  - Docker Compose, Dockerfiles, `.env.example`, `.gitignore`.
+- [x] **Milestone 2: Database, Authentication, Projects, and Ownership**
+  - SQLAlchemy 2 ORM models (`User`, `RefreshSession`, `Project`, `Document`, `DocumentChunk`, `ProcessingJob`, `ResearchRun`, `ResearchStep`, `AgentEvent`, `ReportCitation`).
+  - Alembic migrations (`0001_initial.py`).
+  - Argon2 password hashing, JWT access & rotating refresh tokens.
+  - Auth and Project CRUD API routes with strict ownership isolation.
+- [x] **Milestone 3: Secure PDF Library and Ingestion Worker**
+  - Storage interface and local filesystem adapter (`LocalFileStorage`) with path-traversal protection.
+  - PyMuPDF text & metadata extraction with 1-based page indexing (`PDFParser`).
+  - Validation: size limit, page limit, magic bytes check, scanned PDF detection, duplicate upload prevention.
+  - Chunking with token boundaries & overlap.
+  - Background ingestion service with AI provider embeddings.
+  - Row-level locking worker (`BackgroundWorker` using `FOR UPDATE SKIP LOCKED`).
+  - Document API routes (`/projects/{id}/documents`, `/documents/{id}`, `/documents/{id}/download`, `/documents/{id}`).
+- [x] **Milestone 4: Retrieval Engine and Evidence Viewer**
+  - Hybrid vector cosine similarity search + lexical keyword search.
+  - Reciprocal Rank Fusion (RRF) algorithm implementation.
+  - Evidence context packing with token budget enforcement.
+  - Grounded evidence objects with 1-based page mapping and document metadata.
+  - Evidence retrieval API routes (`/retrieval/search`, `/retrieval/evidence/chunk/{chunk_id}`).
+  - Full retrieval test suite (`test_retrieval.py`).
+- [x] **Milestone 5: Agent Planner, Tool Registry, and Run Orchestration**
+  - Strict Pydantic schemas for research plans, allowlisted tools, structured analyses, and synthesis reports.
+  - Allowlisted tool registry (`search_paper_library`, `get_document_metadata`, `retrieve_page_context`, `search_exact_terms`) with ownership constraints.
+  - Research Planner prompt & structured plan generator.
+  - Orchestrator lifecycle: `queued` -> `retrieving` -> `analysing` -> `synthesising` -> `verifying` -> `completed`.
+  - Research Run API routes (`/projects/{id}/research-runs`, `/research-runs/{id}`, `/research-runs/{id}/plan`, `/research-runs/{id}/approve`, `/research-runs/{id}/cancel`, `/research-runs/{id}/events`).
+- [x] **Milestone 6: Paper Analysis, Synthesis, Comparison, and Citation Verification**
+  - Structured per-paper analysis (objective, methods, dataset, sample size, metrics, key findings, limitations).
+  - Thematic synthesis across sub-questions.
+  - Comparative matrix with explicit comparability classifications (`directly_comparable`, `partially_comparable`, `not_directly_comparable`).
+  - Agreement / disagreement / contextual difference classification.
+  - Candidate research gap extraction with corpus caveats.
+  - Deterministic citation verification pipeline (`CitationVerifier`) validating document membership, valid chunk IDs, and page bounds.
+  - Structured report JSON and publication-grade Markdown export.
+- [x] **Milestone 7: Complete Frontend Experience and Report Export**
+  - Polished editorial UI: Landing, Auth Login/Register, Dashboard, Project Workspace, PDF Library with dropzone, Research Run setup stepper, Plan Review & Edit, Activity Timeline with polling, Research Report with interactive citations popover, Evidence Viewer modal, Settings, and Export to Markdown & PDF.
+- [x] **Milestone 8: Quality, Security, Performance, and Release Readiness**
+  - 10/10 backend pytest integration tests passing.
+  - Frontend Vitest suite passing.
+  - Production TypeScript & Vite build passing.
+  - Ruff linter passing clean without warnings.
+  - GitHub Actions CI workflow configured (`.github/workflows/ci.yml`).
+- [x] **Milestone 9: Demo Readiness and Documentation**
+  - Complete documentation suite created (`docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/API.md`, `docs/AGENT_WORKFLOW.md`, `docs/SECURITY.md`, `docs/TESTING.md`, `docs/DEPLOYMENT.md`, `docs/DEMO_SCRIPT.md`).
+  - Synthetic benchmark academic paper generator script (`scripts/generate_sample_papers.py`).
+  - Root `README.md` complete with architecture, commands, and guide.
+
+## Quality Gates & Verification Status
+- **Backend Tests:** 10 passed in 0.76s (`uv run pytest`)
+- **Backend Lint:** Clean (`uv run ruff check src`)
+- **Frontend Tests:** 1 passed in 478ms (`npm test`)
+- **Frontend Build:** Built in 1.73s (`npm run build`)
+- **Status:** Complete & Ready for deployment.
