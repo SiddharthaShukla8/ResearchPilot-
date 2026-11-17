@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: researchpilot-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: researchpilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d researchpilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: researchpilot-api
+    command: uvicorn researchpilot.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://postgres:postgrespassword@postgres:5432/researchpilot
+      FRONTEND_ORIGIN: http://localhost:5173
+      LOCAL_STORAGE_PATH: /app/storage/documents
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-development-secret-key-32-chars-minimum}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - local_storage:/app/storage/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: researchpilot-worker
+    command: python -m researchpilot.jobs.worker
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://postgres:postgrespassword@postgres:5432/researchpilot
+      LOCAL_STORAGE_PATH: /app/storage/documents
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-development-secret-key-32-chars-minimum}
+    volumes:
+      - ./backend:/app
+      - local_storage:/app/storage/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: researchpilot-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  local_storage:
