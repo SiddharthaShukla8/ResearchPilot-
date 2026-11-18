@@ -16,6 +16,7 @@ class ProjectRepository:
         """List all projects owned by a user."""
         stmt = (
             select(Project)
+            .options(selectinload(Project.documents))
             .where(Project.owner_id == owner_id)
             .order_by(Project.updated_at.desc())
         )

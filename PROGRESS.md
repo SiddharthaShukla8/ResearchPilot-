@@ -48,6 +48,12 @@
   - 10/10 backend pytest integration tests passing.
   - Frontend Vitest suite passing.
   - Production TypeScript & Vite build passing.
+  - Resolved Docker networking and Nginx SPA proxying (`5173:80`).
+  - Implemented database readiness polling loop before running Alembic migrations in `entrypoint.sh`.
+  - Added AI provider mode indicator (`live_openai` vs `offline_mock`) in diagnostics and system capabilities.
+  - Fixed asyncpg lazy-loading on project document listings.
+  - Verified full Playwright E2E browser test passing across full user journey.
+  - Created comprehensive `RELEASE_AUDIT.md`.
   - Ruff linter passing clean without warnings.
   - GitHub Actions CI workflow configured (`.github/workflows/ci.yml`).
 - [x] **Milestone 9: Demo Readiness and Documentation**
