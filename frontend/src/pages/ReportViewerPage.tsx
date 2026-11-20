@@ -19,6 +19,8 @@ export const ReportViewerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'review' | 'matrix' | 'disagreements' | 'gaps'>('review');
   const [copied, setCopied] = useState(false);
 
+  const [exporting, setExporting] = useState(false);
+
   useEffect(() => {
     if (!runId) return;
     api.getRunReport(runId)
@@ -34,8 +36,24 @@ export const ReportViewerPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleExportPDF = () => {
-    window.open(`/api/v1/research-runs/${runId}/export?format=pdf`, '_blank');
+  const handleExportPDF = async () => {
+    if (!runId) return;
+    try {
+      setExporting(true);
+      const blob = await api.downloadRunExport(runId, 'pdf');
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `research_report_${runId.slice(0, 8)}.html`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Failed to export PDF/HTML:', err);
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (loading) {
@@ -73,10 +91,11 @@ export const ReportViewerPage: React.FC = () => {
           </button>
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-sm transition-all"
+            disabled={exporting}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-sm transition-all"
           >
             <Download className="w-3.5 h-3.5" />
-            Export Report (PDF)
+            {exporting ? 'Exporting...' : 'Export Report (PDF)'}
           </button>
         </div>
       </div>
