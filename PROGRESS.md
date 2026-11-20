@@ -54,6 +54,11 @@
   - Fixed asyncpg lazy-loading on project document listings.
   - Verified full Playwright E2E browser test passing across full user journey.
   - Created comprehensive `RELEASE_AUDIT.md`.
+  - Configured local macOS environment (PostgreSQL 18 + pgvector 0.8.7, uv, node 22).
+  - Sanitized null-byte character streams in academic PDF parser.
+  - Upgraded root `README.md` with complete documentation, diagrams, architecture, and step-by-step native and Docker setup guides.
+  - Created `docs/LOCAL_SETUP_AUDIT.md` and `LOCAL_RUN_VERIFICATION.md`.
+  - Enforced strict Bearer Authorization header security for exports and report downloads.
   - Ruff linter passing clean without warnings.
   - GitHub Actions CI workflow configured (`.github/workflows/ci.yml`).
 - [x] **Milestone 9: Demo Readiness and Documentation**
