@@ -1,4 +1,15 @@
-"""FastAPI authentication dependencies and user context extraction."""
+"""FastAPI authentication dependencies and user context extraction.
+
+Security policy:
+- Authentication is EXCLUSIVELY via the HTTP Authorization header
+  using the Bearer scheme (RFC 6750 Section 2.1).
+- Query-string tokens, cookie-based tokens, and form-encoded tokens
+  are intentionally NOT accepted to prevent token leakage through
+  browser history, server access logs, referrer headers, and proxy caches.
+- All endpoints that require authentication depend on `get_current_user`.
+"""
+import logging
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import PyJWTError
@@ -9,6 +20,9 @@ from researchpilot.db.models import User
 from researchpilot.db.session import get_db_session
 from researchpilot.repositories.auth_repo import AuthRepository
 
+logger = logging.getLogger(__name__)
+
+# Strictly enforce Authorization header; no auto_error so we control the message.
 security = HTTPBearer(auto_error=False)
 
 
@@ -16,7 +30,11 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
     session: AsyncSession = Depends(get_db_session),
 ) -> User:
-    """Validate Bearer JWT access token and return authenticated User."""
+    """Validate Bearer JWT access token and return the authenticated User.
+
+    Raises HTTP 401 with WWW-Authenticate: Bearer on any failure:
+    missing credentials, invalid/expired token, inactive user.
+    """
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -25,6 +43,7 @@ async def get_current_user(
         )
 
     token = credentials.credentials
+
     try:
         payload = decode_token(token)
         if payload.get("type") != "access":
@@ -41,6 +60,7 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except PyJWTError:
+        logger.warning("JWT validation failed for incoming request")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials or token expired",
