@@ -117,7 +117,7 @@ class PDFParser:
         total_text_length = 0
 
         for i, page in enumerate(doc):
-            text = page.get_text("text").strip()
+            text = page.get_text("text").replace("\x00", "").strip()
             total_text_length += len(text)
             pages.append(
                 ExtractedPage(
