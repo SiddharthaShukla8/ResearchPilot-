@@ -36,7 +36,13 @@
   - `provider_mode: "offline_mock"` when unconfigured.
   - `provider_mode: "live_openai"` when a live key is supplied.
 
-### 2.2 Error Handling & Resilience Verification
+### 2.2 Header-Based Authentication & Export Security
+- Replaced query-string-based token authentication with strict `Authorization: Bearer <token>` header validation.
+- Tokens are never exposed in URL query parameters, browser histories, or server access logs.
+- Direct report export (PDF / Markdown) from the frontend uses authenticated blob downloads with in-memory object URLs.
+- Verified that all report and citation downloads require an active authenticated session.
+
+### 2.3 Error Handling & Resilience Verification
 The OpenAI provider integration was tested across live failure boundaries without compromising application stability:
 1. **Invalid API Key Handling:**
    - Evaluated with test key (`sk-invalid-test-key-for-validation`).
