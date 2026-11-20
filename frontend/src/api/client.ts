@@ -150,4 +150,15 @@ export const api = {
   async getChunkEvidence(chunkId: string): Promise<any> {
     return request<any>(`/retrieval/evidence/chunk/${chunkId}`);
   },
+
+  async downloadRunExport(runId: string, format: 'pdf' | 'markdown'): Promise<Blob> {
+    const token = localStorage.getItem('rp_access_token');
+    const res = await fetch(`${API_BASE}/research-runs/${runId}/export?format=${format}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      throw new Error('Export download failed');
+    }
+    return res.blob();
+  },
 };
